@@ -90,7 +90,7 @@ export async function generateArrayMethodProblems(theme: Theme, level: 'easy' | 
   - Performance considerations
   - Complex object manipulation`;
 
-  const prompt = `Generate EXACTLY 10 JavaScript coding problems that teach ${theme.name}.
+  const prompt = `Generate EXACTLY 1 JavaScript coding problem that teaches ${theme.name}.
   Each problem should be practical and focused on real-world usage scenarios.
   The problems should be varied but maintain consistent difficulty.
 
@@ -131,7 +131,7 @@ export async function generateArrayMethodProblems(theme: Theme, level: 'easy' | 
     ]
   }
 
-  CRITICAL: You MUST return EXACTLY 10 problems, no more and no less.
+  CRITICAL: You MUST return EXACTLY 1 problem, no more and no less.
 
   Guidelines for ${level} difficulty:${difficultyGuidelines}`;
 
@@ -156,14 +156,14 @@ export async function generateArrayMethodProblems(theme: Theme, level: 'easy' | 
     
     const problems = result.problems as Problem[];
     
-    // Ensure we have exactly 10 problems
+    // Ensure we have exactly 1 problem
     if (!Array.isArray(problems)) {
       throw new Error('Problems is not an array');
     }
     
-    if (problems.length !== 10) {
+    if (problems.length !== 1) {
       console.error('Received problems:', problems);
-      throw new Error(`Expected 10 problems but got ${problems.length}`);
+      throw new Error(`Expected 1 problem but got ${problems.length}`);
     }
     
     // Validate each problem has the required fields

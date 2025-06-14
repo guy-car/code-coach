@@ -74,15 +74,21 @@ function Practice() {
     if (!currentProblem) return;
     
     try {
-      // Create a function from the user's code
-      const userFunction = new Function('arr', code);
+      // Get the variable name from first line (e.g., 'const employees = ...' -> 'employees')
+      const firstLine = currentProblem.setup.split('\n')[0];
+      const variableName = firstLine.split('=')[0].trim().replace('const ', '');
       
-      // Run the function with the first test case input
-      const testInput = JSON.parse(currentProblem.testCases[0].input);
-      const actualArray = userFunction(testInput);
-      const expectedArray = JSON.parse(currentProblem.testCases[0].expected);
+      // Replace user code placeholder with actual user code
+      const combinedCode = currentProblem.setup.replace('// Your code here', code);
       
-      // Compare the arrays
+      // Execute everything in one scope and return the variable
+      const func = new Function(combinedCode + `; return ${variableName};`);
+      const actualArray = func();
+      
+      // Compare with expected output
+      const expectedOutput = currentProblem.testCases[0].expected;
+      const expectedArray = eval(expectedOutput);
+      
       const success = JSON.stringify(actualArray) === JSON.stringify(expectedArray);
       
       setResults({
