@@ -8,7 +8,7 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ currentProblemIndex, totalProblems, level }: ProgressBarProps) {
-  const progress = ((currentProblemIndex + 1) / totalProblems) * 100;
+  const progress = (currentProblemIndex / totalProblems) * 100;
   
   const levelColors = {
     easy: theme.colors.primary,
@@ -24,8 +24,24 @@ export function ProgressBar({ currentProblemIndex, totalProblems, level }: Progr
         <span className="text-sm font-medium font-mono" style={{ color: theme.colors.text.primary }}>
           Problem {currentProblemIndex + 1} of {totalProblems}
         </span>
-        <span className="text-sm font-medium font-mono" style={{ color }}>
-          {level.toUpperCase()} LEVEL
+        <span
+          className="font-mono text-lg px-4 py-1 rounded-md"
+          style={{
+            backgroundColor: color,
+            color: theme.colors.background.dark,
+            boxShadow: theme.animations.glow,
+            fontWeight: 700,
+            letterSpacing: 1,
+            borderRadius: '0.5rem',
+            border: 'none',
+            display: 'inline-block',
+            minWidth: 80,
+            textAlign: 'center',
+          }}
+        >
+          {level === 'easy' && 'EASY'}
+          {level === 'medium' && 'MEDIUM'}
+          {level === 'hard' && 'HARD'}
         </span>
       </div>
       

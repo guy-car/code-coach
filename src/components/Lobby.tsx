@@ -5,8 +5,9 @@ import { theme } from "@/lib/theme"
 import { useState } from "react"
 import coachImage from '@/assets/coach-v1.png'
 import { Button } from '@/components/ui/button'
-import { generateArrayMethodProblems } from "@/services/openai"
 import { CoachLoadingMessage } from "@/components/code-practice/CoachLoadingMessage"
+import { cacheGeneratedProblems } from "@/services/storage"
+import { getProblemsByMethod } from "@/services/problems"
 
 export function Lobby() {
   const navigate = useNavigate()
@@ -23,25 +24,41 @@ export function Lobby() {
     if (selectedTheme) {
       setIsGeneratingProblems(true)
       try {
-        // Generate problems before navigation
-        const problems = await generateArrayMethodProblems(selectedTheme, difficulty);
-        // Navigate with both theme and problems
+        // Simulate loading time to show coach animation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Get problems for all difficulty levels
+        const easyProblems = getProblemsByMethod(selectedTheme.id, 'easy');
+        const mediumProblems = getProblemsByMethod(selectedTheme.id, 'medium');
+        const hardProblems = getProblemsByMethod(selectedTheme.id, 'hard');
+
+        // Validate that we have problems for the selected difficulty
+        const selectedProblems = difficulty === 'easy' ? easyProblems : 
+                               difficulty === 'medium' ? mediumProblems : 
+                               hardProblems;
+
+        if (!selectedProblems || selectedProblems.length === 0) {
+          throw new Error(`No problems found for ${selectedTheme.id} at ${difficulty} difficulty`);
+        }
+
+        // Cache all problems
+        cacheGeneratedProblems('easy', easyProblems);
+        cacheGeneratedProblems('medium', mediumProblems);
+        cacheGeneratedProblems('hard', hardProblems);
+
+        // Navigate with the selected difficulty's problems
         navigate('/practice', { 
           state: { 
             theme: selectedTheme, 
             difficulty,
-            problems 
+            problems: selectedProblems
           } 
         });
       } catch (error) {
-        console.error('Error generating problems:', error);
-        // Still navigate even if generation fails - the Practice component will handle it
-        navigate('/practice', { 
-          state: { 
-            theme: selectedTheme, 
-            difficulty 
-          } 
-        });
+        console.error('Error loading problems:', error);
+        setIsGeneratingProblems(false);
+        // Don't navigate if we don't have problems
+        alert('Sorry, there was an error loading the problems. Please try again.');
       }
     }
   }

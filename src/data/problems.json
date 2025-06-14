@@ -1,0 +1,218 @@
+{
+  "arrayMethods": {
+    "push": {
+      "easy": [
+        {
+          "title": "Add Items to Shopping Cart",
+          "description": "Use the push method to add 'milk' and 'bread' to the shopping cart.",
+          "setup": "const cart = ['eggs', 'cheese'];\n// Your code here\nconsole.log(cart);",
+          "expectedOutput": "[\"eggs\", \"cheese\", \"milk\", \"bread\"]",
+          "difficulty": "easy",
+          "solution": "cart.push('milk', 'bread');",
+          "testCases": [
+            {
+              "input": "cart.push('milk', 'bread')",
+              "expected": "[\"eggs\", \"cheese\", \"milk\", \"bread\"]"
+            }
+          ]
+        },
+        {
+          "title": "Add Items to To-Do List", 
+          "description": "Use the push method to add 'Buy groceries' and 'Pay bills' to the to-do list.",
+          "setup": "const toDoList = ['Clean room', 'Walk the dog'];\n// Your code here\nconsole.log(toDoList);",
+          "expectedOutput": "[\"Clean room\", \"Walk the dog\", \"Buy groceries\", \"Pay bills\"]",
+          "difficulty": "easy",
+          "solution": "toDoList.push('Buy groceries', 'Pay bills');",
+          "testCases": [
+            {
+              "input": "toDoList.push('Buy groceries', 'Pay bills')",
+              "expected": "[\"Clean room\", \"Walk the dog\", \"Buy groceries\", \"Pay bills\"]"
+            }
+          ]
+        }
+      ],
+      "medium": [
+        {
+          "title": "Build User List",
+          "description": "Create a function that adds user objects to an array using push.",
+          "setup": "const users = [];\nfunction addUser(name, age) {\n  // Your code here\n}\naddUser('Alice', 25);\naddUser('Bob', 30);\nconsole.log(users);",
+          "expectedOutput": "[{\"name\": \"Alice\", \"age\": 25}, {\"name\": \"Bob\", \"age\": 30}]",
+          "difficulty": "medium", 
+          "solution": "users.push({name, age});",
+          "testCases": [
+            {
+              "input": "users.push({name, age})",
+              "expected": "[{\"name\": \"Alice\", \"age\": 25}, {\"name\": \"Bob\", \"age\": 30}]"
+            }
+          ]
+        }
+      ],
+      "hard": [
+        {
+          "title": "Dynamic Array Builder",
+          "description": "Build a function that conditionally adds items to different arrays based on criteria.",
+          "setup": "const positives = [];\nconst negatives = [];\nfunction categorizeNumbers(numbers) {\n  numbers.forEach(num => {\n    // Your code here\n  });\n}\ncategorizeNumbers([1, -2, 3, -4, 5]);\nconsole.log({positives, negatives});",
+          "expectedOutput": "{\"positives\": [1, 3, 5], \"negatives\": [-2, -4]}",
+          "difficulty": "hard",
+          "solution": "if (num > 0) positives.push(num); else negatives.push(num);",
+          "testCases": [
+            {
+              "input": "if (num > 0) positives.push(num); else negatives.push(num);",
+              "expected": "{\"positives\": [1, 3, 5], \"negatives\": [-2, -4]}"
+            }
+          ]
+        }
+      ]
+    },
+    "map": {
+      "easy": [
+        {
+          "title": "Double the Numbers",
+          "description": "Use map to create a new array with all numbers doubled.",
+          "setup": "const numbers = [1, 2, 3, 4];\n// Your code here\nconsole.log(numbers);",
+          "expectedOutput": "[2, 4, 6, 8]",
+          "difficulty": "easy",
+          "solution": "numbers = numbers.map(num => num * 2);",
+          "testCases": [
+            {
+              "input": "numbers.map(num => num * 2)",
+              "expected": "[2, 4, 6, 8]"
+            }
+          ]
+        }
+      ],
+      "medium": [
+        {
+          "title": "Transform User Data",
+          "description": "Create a function that transforms an array of user objects to only include their names and ages.",
+          "setup": "const users = [\n  { name: 'Alice', age: 25, email: 'alice@example.com' },\n  { name: 'Bob', age: 30, email: 'bob@example.com' }\n];\nfunction getBasicInfo() {\n  // Your code here\n}\nconsole.log(getBasicInfo());",
+          "expectedOutput": "[{ name: 'Alice', age: 25 }, { name: 'Bob', age: 30 }]",
+          "difficulty": "medium",
+          "solution": "function getBasicInfo() {\n  return users.map(({ name, age }) => ({ name, age }));\n}",
+          "testCases": [
+            {
+              "input": "getBasicInfo()",
+              "expected": "[{ name: 'Alice', age: 25 }, { name: 'Bob', age: 30 }]"
+            }
+          ]
+        }
+      ],
+      "hard": [
+        {
+          "title": "Complex Data Transformation",
+          "description": "Create a function that transforms an array of products, calculating discounts and formatting prices.",
+          "setup": "const products = [\n  { name: 'Laptop', price: 1000, discount: 0.1 },\n  { name: 'Phone', price: 500, discount: 0.2 }\n];\nfunction getDiscountedProducts() {\n  // Your code here\n}\nconsole.log(getDiscountedProducts());",
+          "expectedOutput": "[{ name: 'Laptop', finalPrice: '$900.00' }, { name: 'Phone', finalPrice: '$400.00' }]",
+          "difficulty": "hard",
+          "solution": "function getDiscountedProducts() {\n  return products.map(product => ({\n    name: product.name,\n    finalPrice: `$${(product.price * (1 - product.discount)).toFixed(2)}`\n  }));\n}",
+          "testCases": [
+            {
+              "input": "getDiscountedProducts()",
+              "expected": "[{ name: 'Laptop', finalPrice: '$900.00' }, { name: 'Phone', finalPrice: '$400.00' }]"
+            }
+          ]
+        }
+      ]
+    },
+    "filter": {
+      "easy": [
+        {
+          "title": "Filter Even Numbers",
+          "description": "Use filter to create a new array with only even numbers.",
+          "setup": "const numbers = [1, 2, 3, 4, 5, 6];\n// Your code here\nconsole.log(numbers);",
+          "expectedOutput": "[2, 4, 6]",
+          "difficulty": "easy",
+          "solution": "numbers = numbers.filter(num => num % 2 === 0);",
+          "testCases": [
+            {
+              "input": "numbers.filter(num => num % 2 === 0)",
+              "expected": "[2, 4, 6]"
+            }
+          ]
+        }
+      ],
+      "medium": [
+        {
+          "title": "Filter Active Users",
+          "description": "Create a function that filters an array of users to only include active users with a score above 50.",
+          "setup": "const users = [\n  { name: 'Alice', active: true, score: 75 },\n  { name: 'Bob', active: false, score: 45 },\n  { name: 'Charlie', active: true, score: 60 }\n];\nfunction getActiveHighScorers() {\n  // Your code here\n}\nconsole.log(getActiveHighScorers());",
+          "expectedOutput": "[{ name: 'Alice', active: true, score: 75 }, { name: 'Charlie', active: true, score: 60 }]",
+          "difficulty": "medium",
+          "solution": "function getActiveHighScorers() {\n  return users.filter(user => user.active && user.score > 50);\n}",
+          "testCases": [
+            {
+              "input": "getActiveHighScorers()",
+              "expected": "[{ name: 'Alice', active: true, score: 75 }, { name: 'Charlie', active: true, score: 60 }]"
+            }
+          ]
+        }
+      ],
+      "hard": [
+        {
+          "title": "Advanced Filtering",
+          "description": "Create a function that filters and transforms an array of products based on multiple criteria.",
+          "setup": "const products = [\n  { name: 'Laptop', price: 1000, category: 'electronics', inStock: true },\n  { name: 'Desk', price: 200, category: 'furniture', inStock: false },\n  { name: 'Phone', price: 800, category: 'electronics', inStock: true }\n];\nfunction getAvailableElectronics() {\n  // Your code here\n}\nconsole.log(getAvailableElectronics());",
+          "expectedOutput": "[{ name: 'Laptop', price: '$1000.00' }, { name: 'Phone', price: '$800.00' }]",
+          "difficulty": "hard",
+          "solution": "function getAvailableElectronics() {\n  return products\n    .filter(product => product.category === 'electronics' && product.inStock)\n    .map(product => ({\n      name: product.name,\n      price: `$${product.price.toFixed(2)}`\n    }));\n}",
+          "testCases": [
+            {
+              "input": "getAvailableElectronics()",
+              "expected": "[{ name: 'Laptop', price: '$1000.00' }, { name: 'Phone', price: '$800.00' }]"
+            }
+          ]
+        }
+      ]
+    },
+    "destructuring": {
+      "easy": [
+        {
+          "title": "Extract User Properties",
+          "description": "Use object destructuring to extract name and age from the user object.",
+          "setup": "const user = { name: 'Alice', age: 25, email: 'alice@example.com' };\n// Your code here\nconsole.log({ name, age });",
+          "expectedOutput": "{ name: 'Alice', age: 25 }",
+          "difficulty": "easy",
+          "solution": "const { name, age } = user;",
+          "testCases": [
+            {
+              "input": "const { name, age } = user;",
+              "expected": "{ name: 'Alice', age: 25 }"
+            }
+          ]
+        }
+      ],
+      "medium": [
+        {
+          "title": "Nested Object Destructuring",
+          "description": "Create a function that uses nested destructuring to extract city and country from a user's address.",
+          "setup": "const user = {\n  name: 'Alice',\n  address: {\n    city: 'New York',\n    country: 'USA',\n    zip: '10001'\n  }\n};\nfunction getLocation() {\n  // Your code here\n}\nconsole.log(getLocation());",
+          "expectedOutput": "{ city: 'New York', country: 'USA' }",
+          "difficulty": "medium",
+          "solution": "function getLocation() {\n  const { address: { city, country } } = user;\n  return { city, country };\n}",
+          "testCases": [
+            {
+              "input": "getLocation()",
+              "expected": "{ city: 'New York', country: 'USA' }"
+            }
+          ]
+        }
+      ],
+      "hard": [
+        {
+          "title": "Advanced Destructuring",
+          "description": "Create a function that uses array and object destructuring to process a list of user data.",
+          "setup": "const users = [\n  { name: 'Alice', scores: [85, 90, 95] },\n  { name: 'Bob', scores: [75, 80, 85] }\n];\nfunction getTopScores() {\n  // Your code here\n}\nconsole.log(getTopScores());",
+          "expectedOutput": "[{ name: 'Alice', topScore: 95 }, { name: 'Bob', topScore: 85 }]",
+          "difficulty": "hard",
+          "solution": "function getTopScores() {\n  return users.map(({ name, scores: [first, second, third] }) => ({\n    name,\n    topScore: Math.max(first, second, third)\n  }));\n}",
+          "testCases": [
+            {
+              "input": "getTopScores()",
+              "expected": "[{ name: 'Alice', topScore: 95 }, { name: 'Bob', topScore: 85 }]"
+            }
+          ]
+        }
+      ]
+    }
+  }
+} 

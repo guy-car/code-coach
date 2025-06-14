@@ -13,7 +13,7 @@ import { Theme } from "@/services/themes"
 import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGeneratedProblems, getCachedProblems } from "@/services/storage"
 import { theme } from "@/lib/theme"
 import { Lobby } from "@/components/Lobby"
-import { generateArrayMethodProblems } from "@/services/openai"
+import { getProblemsByMethod } from "@/services/problems"
 import { CoachMotivationAnimation } from "@/components/code-practice/CoachMotivationAnimation"
 
 function Practice() {
@@ -82,28 +82,36 @@ function Practice() {
     
     // Try to load cached problems for the current level
     const cachedProblems = getCachedProblems(savedProgress.currentLevel);
-    if (cachedProblems) {
+    if (cachedProblems && cachedProblems.length > 0) {
       setProblems(cachedProblems);
       setHasGeneratedProblems(true);
     }
 
     // Set theme and handle problems from location state
     if (location.state?.theme) {
+      if (location.state.difficulty) {
+        setCurrentLevel(location.state.difficulty); // Set as early as possible
+      }
       setSelectedTheme(location.state.theme);
       
       // If we have problems in the location state, use them
-      if (location.state.problems) {
+      if (location.state.problems && location.state.problems.length > 0) {
         handleProblemsGenerated(location.state.problems);
       } else if (location.state.difficulty) {
-        // If we have a difficulty but no problems, generate them
-        setCurrentLevel(location.state.difficulty);
+        // If we have a difficulty but no problems, load them from the database
         setIsGeneratingProblems(true);
-        generateArrayMethodProblems(location.state.theme, location.state.difficulty)
-          .then(handleProblemsGenerated)
-          .catch(error => {
-            console.error('Error generating problems:', error);
-            setIsGeneratingProblems(false);
-          });
+        try {
+          const problems = getProblemsByMethod(location.state.theme.id, location.state.difficulty);
+          if (!problems || problems.length === 0) {
+            throw new Error(`No problems found for ${location.state.theme.id} at ${location.state.difficulty} difficulty`);
+          }
+          handleProblemsGenerated(problems);
+        } catch (error) {
+          console.error('Error loading problems:', error);
+          setIsGeneratingProblems(false);
+          alert('Sorry, there was an error loading the problems. Please try again.');
+          navigate('/');
+        }
       }
     }
   }, [location.state]);
@@ -255,20 +263,45 @@ function Practice() {
     setProblems([]);
     setCurrentProblemIndex(0);
     setResults(null);
-    setIsGeneratingProblems(true);
     
     // Update progress
     updateUserProgress({ currentLevel: nextLevel, currentProblemIndex: 0 });
 
-    try {
-      if (selectedTheme) {
-        const newProblems = await generateArrayMethodProblems(selectedTheme, nextLevel);
-        handleProblemsGenerated(newProblems);
+    // Show coach message during loading
+    setCoachMessage("Leveling up! Time to push your limits, recruit!");
+    setShowCoachMotivation(true);
+    setCoachMotivationKey(prev => prev + 1);
+
+    // Try to get cached problems first
+    const cachedProblems = getCachedProblems(nextLevel);
+    if (cachedProblems && cachedProblems.length > 0) {
+      // Simulate loading time to show coach animation
+      setIsGeneratingProblems(true);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      handleProblemsGenerated(cachedProblems);
+    } else {
+      // If no cached problems, load them from the database
+      setIsGeneratingProblems(true);
+      try {
+        if (selectedTheme) {
+          // Simulate loading time to show coach animation
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          const problems = getProblemsByMethod(selectedTheme.id, nextLevel);
+          if (!problems || problems.length === 0) {
+            throw new Error(`No problems found for ${selectedTheme.id} at ${nextLevel} difficulty`);
+          }
+          handleProblemsGenerated(problems);
+        }
+      } catch (error) {
+        console.error('Error loading problems:', error);
+        setIsGeneratingProblems(false);
+        alert('Sorry, there was an error loading the problems. Please try again.');
+        navigate('/');
       }
-    } catch (error) {
-      console.error('Error generating problems:', error);
-      setIsGeneratingProblems(false);
     }
+
+    // Hide coach message after loading
+    setTimeout(() => setShowCoachMotivation(false), 2000);
   }
 
   return (
@@ -294,25 +327,6 @@ function Practice() {
             <p className="text-sm" style={{ color: theme.colors.text.muted }}>
             </p>
           </div>
-          {hasGeneratedProblems && currentProblem && (
-            <div className="flex items-center gap-4">
-              <Badge variant="secondary" className="font-mono text-lg" style={{ 
-                backgroundColor: theme.colors.background.dark,
-                color: theme.colors.text.primary
-              }}>
-                Problem {currentProblemIndex + 1} of {problems.length}
-              </Badge>
-              <Badge className="font-mono text-lg" style={{ 
-                backgroundColor: 
-                  currentProblem.difficulty === 'easy' ? theme.colors.primary :
-                  currentProblem.difficulty === 'medium' ? theme.colors.secondary :
-                  theme.colors.accent,
-                color: theme.colors.background.dark
-              }}>
-                {currentProblem.difficulty.toUpperCase()}
-              </Badge>
-            </div>
-          )}
         </header>
 
         {!selectedTheme ? (

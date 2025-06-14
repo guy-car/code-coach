@@ -1,3 +1,5 @@
+import problemsData from '@/data/problems.json';
+
 export interface Problem {
   title: string;
   description: string;
@@ -9,6 +11,45 @@ export interface Problem {
     input: string;
     expected: string;
   }[];
+}
+
+export interface ProblemsByMethod {
+  [method: string]: {
+    [difficulty: string]: Problem[];
+  };
+}
+
+export interface ProblemsDatabase {
+  arrayMethods: {
+    [method: string]: {
+      [difficulty: string]: Problem[];
+    };
+  };
+}
+
+export function getProblemsByMethod(method: string, difficulty: 'easy' | 'medium' | 'hard'): Problem[] {
+  const problems = problemsData as ProblemsDatabase;
+  
+  // Map theme IDs to their corresponding methods
+  const methodMap: { [key: string]: string } = {
+    'array-methods-basic': 'push', // For now, default to push problems
+    'array-methods-iteration': 'map',
+    'object-destructuring': 'destructuring',
+    'array-destructuring': 'destructuring'
+  };
+
+  const actualMethod = methodMap[method] || method;
+  return problems.arrayMethods[actualMethod]?.[difficulty] || [];
+}
+
+export function getAllProblemsByMethod(method: string): { [difficulty: string]: Problem[] } {
+  const problems = problemsData as ProblemsDatabase;
+  return problems.arrayMethods[method] || {};
+}
+
+export function getAvailableMethods(): string[] {
+  const problems = problemsData as ProblemsDatabase;
+  return Object.keys(problems.arrayMethods);
 }
 
 // Pre-defined problems for .push() method
