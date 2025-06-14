@@ -70,7 +70,7 @@ export async function generateArrayMethodProblem(method: string): Promise<Proble
 }
 
 export async function generateArrayMethodProblems(method: string, level: 'easy' | 'medium' | 'hard'): Promise<Problem[]> {
-  const prompt = `Generate 10 JavaScript coding problems that teach the array ${method} method, all at ${level} difficulty level.
+  const prompt = `Generate EXACTLY 10 JavaScript coding problems that teach the array ${method} method, all at ${level} difficulty level.
   Each problem should be practical and focused on real-world usage scenarios.
   The problems should be varied but maintain consistent difficulty.
 
@@ -108,6 +108,8 @@ export async function generateArrayMethodProblems(method: string, level: 'easy' 
     ]
   }
 
+  CRITICAL: You MUST return EXACTLY 10 problems, no more and no less.
+
   Guidelines for ${level} difficulty:
   ${level === 'easy' ? `
   - Basic usage of the method with simple data types
@@ -137,7 +139,21 @@ export async function generateArrayMethodProblems(method: string, level: 'easy' 
     if (!response) throw new Error('No response from OpenAI');
     
     const result = JSON.parse(response);
-    return result.problems as Problem[];
+    const problems = result.problems as Problem[];
+    
+    // Ensure we have exactly 10 problems
+    if (!Array.isArray(problems) || problems.length !== 10) {
+      throw new Error(`Expected 10 problems but got ${problems?.length || 0}`);
+    }
+    
+    // Validate each problem has the required fields
+    problems.forEach((problem, index) => {
+      if (!problem.title || !problem.description || !problem.setup || !problem.expectedOutput) {
+        throw new Error(`Problem ${index + 1} is missing required fields`);
+      }
+    });
+    
+    return problems;
   } catch (error) {
     console.error('Error generating problems:', error);
     throw error;

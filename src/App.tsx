@@ -7,6 +7,7 @@ import { ProgressBar } from "@/components/code-practice/ProgressBar"
 import { Badge } from "@/components/ui/badge"
 import { Problem, pushProblems as defaultProblems } from "@/services/problems"
 import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGeneratedProblems, getCachedProblems } from "@/services/storage"
+import { theme } from "@/lib/theme"
 
 function App() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
@@ -58,13 +59,11 @@ function App() {
       
       // Combine setup code with user code
       const setupCode = currentProblem.setup.replace('// Your code here', code)
-      console.log('Setup code:', setupCode)
       
       // Create a mock console.log to capture the output
       let capturedOutput: any = null
       const mockConsole = {
         log: (...args: any[]) => {
-          console.log('Captured console.log output:', args[0])
           capturedOutput = args[0]
         }
       }
@@ -72,9 +71,6 @@ function App() {
       // Execute the code with the mock console
       const func = new Function('console', setupCode)
       func(mockConsole)
-      
-      console.log('Captured output:', capturedOutput)
-      console.log('Expected output:', currentProblem.expectedOutput)
       
       // Parse both the actual and expected outputs
       const actualArray = Array.isArray(capturedOutput) ? capturedOutput : JSON.parse(JSON.stringify(capturedOutput))
@@ -84,9 +80,6 @@ function App() {
         .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3') // Add quotes around property names
         .replace(/'/g, '"') // Replace single quotes with double quotes
       const expectedArray = JSON.parse(normalizedExpectedOutput)
-      
-      console.log('Actual array:', actualArray)
-      console.log('Expected array:', expectedArray)
       
       // Compare array contents with deep equality for objects
       const success = Array.isArray(actualArray) && 
@@ -99,8 +92,6 @@ function App() {
                        }
                        return item === expectedItem
                      })
-      
-      console.log('Success:', success)
       
       // Format the actual output to match the expected output style (single quotes with spaces)
       const formatOutput = (arr: any[]): string => {
@@ -158,17 +149,42 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ 
+      backgroundColor: theme.colors.background.dark,
+      color: theme.colors.text.primary,
+      fontFamily: theme.fonts.mono
+    }}>
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-between border-b pb-4" style={{ borderColor: theme.colors.border }}>
           <div>
-            <h1 className="text-3xl font-bold">Code Coach</h1>
-            <p className="text-muted-foreground">Master JavaScript through repetition</p>
+            <h1 className="text-5xl font-bold mb-2" style={{ 
+              color: theme.colors.primary,
+              fontFamily: theme.fonts.display,
+              textShadow: theme.animations.glow
+            }}>
+              HACKER GYM
+            </h1>
+            <p className="text-sm" style={{ color: theme.colors.text.muted }}>
+              Reps reps reps
+            </p>
           </div>
           {currentProblem && (
             <div className="flex items-center gap-4">
-              <Badge variant="secondary">Problem {currentProblemIndex + 1} of {problems.length}</Badge>
-              <Badge>{currentProblem.difficulty}</Badge>
+              <Badge variant="secondary" className="font-mono text-lg" style={{ 
+                backgroundColor: theme.colors.background.dark,
+                color: theme.colors.text.primary
+              }}>
+                Problem {currentProblemIndex + 1} of {problems.length}
+              </Badge>
+              <Badge className="font-mono text-lg" style={{ 
+                backgroundColor: 
+                  currentProblem.difficulty === 'easy' ? theme.colors.primary :
+                  currentProblem.difficulty === 'medium' ? theme.colors.secondary :
+                  theme.colors.accent,
+                color: theme.colors.background.dark
+              }}>
+                {currentProblem.difficulty.toUpperCase()}
+              </Badge>
             </div>
           )}
         </header>
@@ -202,9 +218,14 @@ function App() {
             {results?.success && currentProblemIndex < problems.length - 1 && (
               <button
                 onClick={handleNextProblem}
-                className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                className="w-full py-3 px-4 rounded-md font-mono text-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,255,0,0.3)]"
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.background.dark,
+                  boxShadow: theme.animations.glow
+                }}
               >
-                Next Problem
+                NEXT PROBLEM
               </button>
             )}
           </>
