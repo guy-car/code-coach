@@ -2,11 +2,13 @@ import { useState } from "react"
 import { CodeEditor } from "@/components/code-practice/CodeEditor"
 import { ProblemDisplay } from "@/components/code-practice/ProblemDisplay"
 import { Results } from "@/components/code-practice/Results"
+import { ProblemGenerator } from "@/components/code-practice/ProblemGenerator"
 import { Badge } from "@/components/ui/badge"
-import { Problem, pushProblems } from "@/services/problems"
+import { Problem, pushProblems as defaultProblems } from "@/services/problems"
 
 function App() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
+  const [problems, setProblems] = useState<Problem[]>(defaultProblems)
   const [results, setResults] = useState<{
     success: boolean;
     message: string;
@@ -15,7 +17,14 @@ function App() {
   } | null>(null)
   const [codeEditorKey, setCodeEditorKey] = useState(0)
 
-  const currentProblem = pushProblems[currentProblemIndex]
+  const currentProblem = problems[currentProblemIndex]
+
+  const handleProblemsGenerated = (newProblems: Problem[]) => {
+    setProblems(newProblems)
+    setCurrentProblemIndex(0)
+    setResults(null)
+    setCodeEditorKey(prev => prev + 1)
+  }
 
   const handleRunCode = (code: string) => {
     try {
@@ -71,10 +80,9 @@ function App() {
   }
 
   const handleNextProblem = () => {
-    if (currentProblemIndex < pushProblems.length - 1) {
+    if (currentProblemIndex < problems.length - 1) {
       setCurrentProblemIndex(prev => prev + 1)
       setResults(null)
-      // Reset the code editor by triggering a key change
       setCodeEditorKey(prev => prev + 1)
     }
   }
@@ -88,16 +96,17 @@ function App() {
             <p className="text-muted-foreground">Master JavaScript through repetition</p>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="secondary">Problem {currentProblemIndex + 1} of {pushProblems.length}</Badge>
+            <Badge variant="secondary">Problem {currentProblemIndex + 1} of {problems.length}</Badge>
             <Badge>{currentProblem.difficulty}</Badge>
           </div>
         </header>
 
+        <ProblemGenerator onProblemsGenerated={handleProblemsGenerated} />
         <ProblemDisplay problem={currentProblem} />
         <CodeEditor onRun={handleRunCode} key={codeEditorKey} />
         {results && <Results {...results} />}
         
-        {results?.success && currentProblemIndex < pushProblems.length - 1 && (
+        {results?.success && currentProblemIndex < problems.length - 1 && (
           <button
             onClick={handleNextProblem}
             className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
