@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { theme } from "@/lib/theme"
 
 interface ProblemDisplayProps {
   problem: {
@@ -41,39 +41,49 @@ export function ProblemDisplay({ problem }: ProblemDisplayProps) {
   }
 
   return (
-    <Card>
+    <Card className="border" style={{ 
+      backgroundColor: theme.colors.background.card,
+      borderColor: theme.colors.border
+    }}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{problem.title}</CardTitle>
-          <Badge variant={
-            problem.difficulty === "easy" ? "secondary" :
-            problem.difficulty === "medium" ? "default" :
-            "destructive"
-          }>
-            {problem.difficulty}
-          </Badge>
-        </div>
+        <CardTitle className="font-mono" style={{ color: theme.colors.primary }}>
+          {problem.title}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <p className="text-muted-foreground">{problem.description}</p>
+        <p className="text-muted-foreground font-mono" style={{ color: theme.colors.text.muted }}>
+          {problem.description}
+        </p>
         
         <div className="space-y-4">
           {givenCodeLines.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2">Given Code:</h3>
-              <div className="bg-muted p-4 rounded-md">
-                <pre className="text-sm">{givenCodeLines.join('\n')}</pre>
+              <h3 className="text-sm font-medium mb-2 font-mono" style={{ color: theme.colors.primary }}>
+                Given Code:
+              </h3>
+              <div className="p-4 rounded-md font-mono text-sm" style={{ 
+                backgroundColor: theme.colors.background.dark,
+                color: theme.colors.text.secondary,
+                border: `1px solid ${theme.colors.border}`
+              }}>
+                <pre className="whitespace-pre-wrap">{givenCodeLines.join('\n')}</pre>
               </div>
             </div>
           )}
 
           {functionSkeleton.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2">Complete This Function:</h3>
-              <div className="bg-muted p-4 rounded-md">
-                <pre className="text-sm">{functionSkeleton.join('\n')}</pre>
+              <h3 className="text-sm font-medium mb-2 font-mono" style={{ color: theme.colors.primary }}>
+                Complete This Function:
+              </h3>
+              <div className="p-4 rounded-md font-mono text-sm" style={{ 
+                backgroundColor: theme.colors.background.dark,
+                color: theme.colors.text.secondary,
+                border: `1px solid ${theme.colors.border}`
+              }}>
+                <pre className="whitespace-pre-wrap">{functionSkeleton.join('\n')}</pre>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm mt-2 font-mono" style={{ color: theme.colors.text.muted }}>
                 Write only the code that goes inside the function body, between the curly braces.
               </p>
             </div>
@@ -81,9 +91,15 @@ export function ProblemDisplay({ problem }: ProblemDisplayProps) {
 
           {exampleUsage.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2">Example Usage:</h3>
-              <div className="bg-muted p-4 rounded-md">
-                <pre className="text-sm">{exampleUsage.join('\n')}</pre>
+              <h3 className="text-sm font-medium mb-2 font-mono" style={{ color: theme.colors.primary }}>
+                Example Usage:
+              </h3>
+              <div className="p-4 rounded-md font-mono text-sm" style={{ 
+                backgroundColor: theme.colors.background.dark,
+                color: theme.colors.text.secondary,
+                border: `1px solid ${theme.colors.border}`
+              }}>
+                <pre className="whitespace-pre-wrap">{exampleUsage.join('\n')}</pre>
               </div>
             </div>
           )}

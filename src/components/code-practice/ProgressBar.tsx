@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { theme } from "@/lib/theme"
 
 interface ProgressBarProps {
   currentProblemIndex: number;
@@ -10,40 +11,35 @@ export function ProgressBar({ currentProblemIndex, totalProblems, level }: Progr
   const progress = ((currentProblemIndex + 1) / totalProblems) * 100;
   
   const levelColors = {
-    easy: {
-      bg: 'bg-green-500',
-      text: 'text-green-500',
-      border: 'border-green-500'
-    },
-    medium: {
-      bg: 'bg-yellow-500',
-      text: 'text-yellow-500',
-      border: 'border-yellow-500'
-    },
-    hard: {
-      bg: 'bg-red-500',
-      text: 'text-red-500',
-      border: 'border-red-500'
-    }
+    easy: theme.colors.primary,
+    medium: theme.colors.secondary,
+    hard: theme.colors.accent
   };
 
-  const colors = levelColors[level];
+  const color = levelColors[level];
 
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium font-mono" style={{ color: theme.colors.text.primary }}>
           Problem {currentProblemIndex + 1} of {totalProblems}
         </span>
-        <span className={cn("text-sm font-medium", colors.text)}>
-          {level.charAt(0).toUpperCase() + level.slice(1)} Level
+        <span className="text-sm font-medium font-mono" style={{ color }}>
+          {level.toUpperCase()} LEVEL
         </span>
       </div>
       
-      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+      <div className="h-2 w-full rounded-full overflow-hidden" style={{ 
+        backgroundColor: theme.colors.background.dark,
+        border: `1px solid ${theme.colors.border}`
+      }}>
         <div 
-          className={cn("h-full transition-all duration-300", colors.bg)}
-          style={{ width: `${progress}%` }}
+          className="h-full transition-all duration-300"
+          style={{ 
+            width: `${progress}%`,
+            backgroundColor: color,
+            boxShadow: `0 0 10px ${color}40`
+          }}
         />
       </div>
       
@@ -52,9 +48,14 @@ export function ProgressBar({ currentProblemIndex, totalProblems, level }: Progr
           <div
             key={index}
             className={cn(
-              "w-1 h-1 rounded-full",
-              index <= currentProblemIndex ? colors.bg : 'bg-muted'
+              "w-1 h-1 rounded-full transition-all duration-300",
+              index <= currentProblemIndex ? 'animate-pulse' : ''
             )}
+            style={{ 
+              backgroundColor: index <= currentProblemIndex ? color : theme.colors.background.dark,
+              border: `1px solid ${index <= currentProblemIndex ? color : theme.colors.border}`,
+              boxShadow: index <= currentProblemIndex ? `0 0 5px ${color}40` : 'none'
+            }}
           />
         ))}
       </div>
