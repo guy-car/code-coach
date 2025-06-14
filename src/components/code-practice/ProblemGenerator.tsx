@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { generateArrayMethodProblems } from "@/services/openai"
 import { Problem } from "@/services/problems"
+import { Theme } from "@/services/themes"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CoachLoadingMessage } from "./CoachLoadingMessage"
 
@@ -10,9 +11,10 @@ interface ProblemGeneratorProps {
   onProblemsGenerated: (problems: Problem[]) => void;
   currentLevel: 'easy' | 'medium' | 'hard';
   levelsCompleted: string[];
+  selectedTheme: Theme;
 }
 
-export function ProblemGenerator({ onProblemsGenerated, currentLevel, levelsCompleted }: ProblemGeneratorProps) {
+export function ProblemGenerator({ onProblemsGenerated, currentLevel, levelsCompleted, selectedTheme }: ProblemGeneratorProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedLevel, setSelectedLevel] = useState<'easy' | 'medium' | 'hard'>(currentLevel)
@@ -22,7 +24,7 @@ export function ProblemGenerator({ onProblemsGenerated, currentLevel, levelsComp
     setError(null)
     
     try {
-      const problems = await generateArrayMethodProblems('push', selectedLevel)
+      const problems = await generateArrayMethodProblems(selectedTheme, selectedLevel)
       onProblemsGenerated(problems)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate problems')
@@ -47,7 +49,7 @@ export function ProblemGenerator({ onProblemsGenerated, currentLevel, levelsComp
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Generate Problems</h3>
           <p className="text-sm text-muted-foreground">
-            Generate a new set of JavaScript array method practice problems.
+            Generate a new set of {selectedTheme.name} practice problems.
           </p>
           
           <div className="flex items-center gap-4">
