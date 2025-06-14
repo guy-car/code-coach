@@ -58,14 +58,19 @@ export function CoachLoadingMessage({ isLoading }: CoachLoadingMessageProps) {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="flex flex-col items-center gap-8">
-        <img 
-          src={coachImage} 
-          alt="Code Coach" 
-          className={cn(
-            "w-48 h-48 object-contain transition-opacity duration-500",
-            isVisible ? "opacity-100" : "opacity-0"
-          )}
-        />
+        <div className="relative w-48 h-48">
+          <img 
+            src={coachImage} 
+            alt="Code Coach" 
+            className={cn(
+              "w-full h-full object-contain transition-opacity duration-500 absolute inset-0",
+              isVisible ? "opacity-100" : "opacity-0"
+            )}
+          />
+          <div className="absolute inset-0">
+            <div className="w-full h-full bg-[#00FF00] opacity-20 blur-xl animate-pulse" />
+          </div>
+        </div>
         <div 
           className={cn(
             "text-2xl font-mono text-[#00FF00] transition-opacity duration-500",
