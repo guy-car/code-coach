@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import coachImage from '@/assets/coach-v1.png'
 
 const loadingMessages = [
-  "Chalking up the console...",
-  "Running a quick lap around the stack...",
-  "Pumping up the JavaScript...",
-  "Warming up the compiler...",
-  "Stretching the syntax...",
-  "Loading the code weights...",
-  "Buffering the brain gains...",
-  "Initializing the inner coder...",
-  "Calibrating the code coach...",
-  "Preparing your programming path..."
+  "Coach is chalking up the console...",
+  "Coach is running a quick lap around the stack...",
+  "Coach is pumping up the JavaScript...",
+  "Coach is warming up the compiler...",
+  "Coach is stretching the syntax...",
+  "Coach is loading the code weights...",
+  "Coach is buffering the brain gains...",
+  "Coach is initializing the inner coder...",
+  "Coach is calibrating the code coach...",
+  "Coach is preparing your programming path..."
 ]
 
 interface CoachLoadingMessageProps {
@@ -56,21 +57,31 @@ export function CoachLoadingMessage({ isLoading }: CoachLoadingMessageProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div 
-        className={cn(
-          "text-2xl font-mono text-[#00FF00] transition-opacity duration-500",
-          isVisible ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <span className="animate-pulse">
-          {message}
-          <span className={cn(
-            "ml-1",
-            showCursor ? "opacity-100" : "opacity-0"
-          )}>
-            |
+      <div className="flex flex-col items-center gap-8">
+        <img 
+          src={coachImage} 
+          alt="Code Coach" 
+          className={cn(
+            "w-48 h-48 object-contain transition-opacity duration-500",
+            isVisible ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div 
+          className={cn(
+            "text-2xl font-mono text-[#00FF00] transition-opacity duration-500",
+            isVisible ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <span className="animate-pulse">
+            {message}
+            <span className={cn(
+              "ml-1",
+              showCursor ? "opacity-100" : "opacity-0"
+            )}>
+              |
+            </span>
           </span>
-        </span>
+        </div>
       </div>
     </div>
   )
