@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CodeEditor } from "@/components/code-practice/CodeEditor"
 import { ProblemDisplay } from "@/components/code-practice/ProblemDisplay"
 import { Results } from "@/components/code-practice/Results"
 import { ProblemGenerator } from "@/components/code-practice/ProblemGenerator"
 import { Badge } from "@/components/ui/badge"
 import { Problem, pushProblems as defaultProblems } from "@/services/problems"
+import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGeneratedProblems, getCachedProblems } from "@/services/storage"
 
 function App() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
@@ -16,14 +17,31 @@ function App() {
     actualOutput?: string;
   } | null>(null)
   const [codeEditorKey, setCodeEditorKey] = useState(0)
+  const [currentLevel, setCurrentLevel] = useState<'easy' | 'medium' | 'hard'>('easy')
 
   const currentProblem = problems[currentProblemIndex]
 
+  // Load saved progress on component mount
+  useEffect(() => {
+    const savedProgress = loadUserProgress();
+    setCurrentLevel(savedProgress.currentLevel);
+    setCurrentProblemIndex(savedProgress.currentProblemIndex);
+    
+    // Try to load cached problems for the current level
+    const cachedProblems = getCachedProblems(savedProgress.currentLevel);
+    if (cachedProblems) {
+      setProblems(cachedProblems);
+    }
+  }, []);
+
   const handleProblemsGenerated = (newProblems: Problem[]) => {
-    setProblems(newProblems)
-    setCurrentProblemIndex(0)
-    setResults(null)
-    setCodeEditorKey(prev => prev + 1)
+    setProblems(newProblems);
+    setCurrentProblemIndex(0);
+    setResults(null);
+    setCodeEditorKey(prev => prev + 1);
+    
+    // Cache the generated problems
+    cacheGeneratedProblems(currentLevel, newProblems);
   }
 
   const handleRunCode = (code: string) => {
@@ -82,6 +100,11 @@ function App() {
         expectedOutput: currentProblem.expectedOutput,
         actualOutput: formatOutput(actualArray)
       })
+
+      // If successful and it's the last problem, mark the level as completed
+      if (success && currentProblemIndex === problems.length - 1) {
+        markLevelCompleted(currentLevel);
+      }
     } catch (error) {
       console.error('Execution error:', error)
       setResults({
@@ -95,9 +118,13 @@ function App() {
 
   const handleNextProblem = () => {
     if (currentProblemIndex < problems.length - 1) {
-      setCurrentProblemIndex(prev => prev + 1)
-      setResults(null)
-      setCodeEditorKey(prev => prev + 1)
+      const newIndex = currentProblemIndex + 1;
+      setCurrentProblemIndex(newIndex);
+      setResults(null);
+      setCodeEditorKey(prev => prev + 1);
+      
+      // Save progress
+      updateUserProgress({ currentProblemIndex: newIndex });
     }
   }
 
