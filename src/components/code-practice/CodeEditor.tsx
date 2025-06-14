@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RotateCcw } from "lucide-react"
+import { theme } from "@/lib/theme"
 
 interface CodeEditorProps {
   onRun: (code: string) => void;
@@ -17,6 +18,19 @@ export function CodeEditor({ onRun, initialCode = "", key }: CodeEditorProps) {
     localStorage.clear();
     window.location.reload();
   }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        onRun(code);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [code, onRun]);
 
   return (
     <Card className="p-4">
@@ -34,7 +48,7 @@ export function CodeEditor({ onRun, initialCode = "", key }: CodeEditorProps) {
             placeholder="// Write your code here..."
           />
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <Button 
             variant="outline" 
             onClick={handleReset}
@@ -43,7 +57,12 @@ export function CodeEditor({ onRun, initialCode = "", key }: CodeEditorProps) {
             <RotateCcw className="h-4 w-4" />
             Reset Progress
           </Button>
-          <Button onClick={() => onRun(code)}>Run Code</Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: theme.colors.text.muted }}>
+              {navigator.platform.includes('Mac') ? '⌘ + Enter' : 'Ctrl + Enter'}
+            </span>
+            <Button onClick={() => onRun(code)}>Run Code</Button>
+          </div>
         </div>
       </div>
     </Card>

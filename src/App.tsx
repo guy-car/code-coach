@@ -6,12 +6,14 @@ import { Results } from "@/components/code-practice/Results"
 import { ProblemGenerator } from "@/components/code-practice/ProblemGenerator"
 import { ProgressBar } from "@/components/code-practice/ProgressBar"
 import { ThemeSelection } from "@/components/code-practice/ThemeSelection"
+import { LevelCompletionAnimation } from "@/components/code-practice/LevelCompletionAnimation"
 import { Badge } from "@/components/ui/badge"
 import { Problem } from "@/services/problems"
 import { Theme } from "@/services/themes"
 import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGeneratedProblems, getCachedProblems } from "@/services/storage"
 import { theme } from "@/lib/theme"
 import { Lobby } from "@/components/Lobby"
+import { generateArrayMethodProblems } from "@/services/openai"
 
 function Practice() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
@@ -27,6 +29,8 @@ function Practice() {
   const [levelsCompleted, setLevelsCompleted] = useState<string[]>([])
   const [hasGeneratedProblems, setHasGeneratedProblems] = useState(false)
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null)
+  const [showLevelCompletion, setShowLevelCompletion] = useState(false)
+  const [isGeneratingProblems, setIsGeneratingProblems] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -46,9 +50,24 @@ function Practice() {
       setHasGeneratedProblems(true);
     }
 
-    // Set theme from location state
+    // Set theme and handle problems from location state
     if (location.state?.theme) {
       setSelectedTheme(location.state.theme);
+      
+      // If we have problems in the location state, use them
+      if (location.state.problems) {
+        handleProblemsGenerated(location.state.problems);
+      } else if (location.state.difficulty) {
+        // If we have a difficulty but no problems, generate them
+        setCurrentLevel(location.state.difficulty);
+        setIsGeneratingProblems(true);
+        generateArrayMethodProblems(location.state.theme, location.state.difficulty)
+          .then(handleProblemsGenerated)
+          .catch(error => {
+            console.error('Error generating problems:', error);
+            setIsGeneratingProblems(false);
+          });
+      }
     }
   }, [location.state]);
 
@@ -62,6 +81,7 @@ function Practice() {
     setCurrentProblemIndex(0);
     setResults(null);
     setCodeEditorKey(prev => prev + 1);
+    setIsGeneratingProblems(false);
     
     // Cache the problems
     cacheGeneratedProblems(currentLevel, newProblems);
@@ -70,39 +90,82 @@ function Practice() {
     updateUserProgress({ currentProblemIndex: 0 });
   }
 
+  /**
+   * ========================================
+   * CRITICAL: STABLE CODE SANDBOX PATTERN
+   * ========================================
+   * 
+   * This implementation has been tested and is STABLE.
+   * DO NOT modify without understanding why previous attempts failed.
+   * 
+   * WORKING PATTERN:
+   * 1. String replacement: Replace '// Your code here' with user's code
+   * 2. Single execution: Use new Function() with combined code
+   * 3. Return variable: Extract and return the target variable
+   * 
+   * FAILED APPROACHES (do not revert to these):
+   * ❌ Multiple eval() calls - creates separate scopes
+   * ❌ Function wrapping - breaks variable access
+   * ❌ Separate setup/user execution - scope isolation
+   * 
+   * EXAMPLE:
+   * Setup: 'const arr = [1,2]; // Your code here; console.log(arr);'
+   * User: 'arr.push(3)'
+   * Combined: 'const arr = [1,2]; arr.push(3); console.log(arr); return arr;'
+   * 
+   * Last stable: [2024-06-14]
+   * Issues fixed: Variable scope, execution context, consistent results
+   */
   const handleRunCode = async (code: string) => {
+    /**
+     * CRITICAL: This sandbox implementation is stable and tested.
+     * DO NOT modify the execution pattern without thorough testing.
+     * 
+     * Pattern: String replacement + single Function execution
+     * - Replace '// Your code here' with user code
+     * - Execute in single scope using new Function()
+     * - Return target variable
+     * 
+     * This avoids scope issues from multiple eval() calls or function wrapping.
+     */
     if (!currentProblem) return;
-    
     try {
-      // Get the variable name from first line (e.g., 'const employees = ...' -> 'employees')
+      // Extract the variable name from the first line of setup (e.g., 'const employees = ...' -> 'employees')
       const firstLine = currentProblem.setup.split('\n')[0];
       const variableName = firstLine.split('=')[0].trim().replace('const ', '');
-      
-      // Replace user code placeholder with actual user code
+
+      // Replace the placeholder with the user's code
+      // This ensures the user's code is executed in the same scope as the setup
       const combinedCode = currentProblem.setup.replace('// Your code here', code);
-      
-      // Execute everything in one scope and return the variable
-      const func = new Function(combinedCode + `; return ${variableName};`);
+      console.log('Combined code being executed:', combinedCode);
+
+      const finalCode = combinedCode + `; return ${variableName};`;
+      console.log('Final code:', finalCode);
+
+      // Execute all code in a single scope and return the target variable
+      // This avoids scope issues from wrapping or multiple evals
+      const func = new Function(finalCode);
       const actualArray = func();
-      
+
       // Compare with expected output
       const expectedOutput = currentProblem.testCases[0].expected;
       const expectedArray = eval(expectedOutput);
-      
+
       const success = JSON.stringify(actualArray) === JSON.stringify(expectedArray);
-      
+
       setResults({
         success,
         message: success ? 'Correct!' : 'Try again!',
         expectedOutput: currentProblem.expectedOutput,
         actualOutput: JSON.stringify(actualArray, null, 2)
       });
-      
+
       if (success && currentProblemIndex === problems.length - 1) {
         // Mark level as completed
         const newLevelsCompleted = [...levelsCompleted, currentLevel];
         setLevelsCompleted(newLevelsCompleted);
         markLevelCompleted(currentLevel);
+        setShowLevelCompletion(true);
       }
     } catch (error) {
       console.error('Execution error:', error);
@@ -127,6 +190,34 @@ function Practice() {
     }
   }
 
+  const handleContinue = () => {
+    setShowLevelCompletion(false);
+  }
+
+  const handleIncreaseDifficulty = async () => {
+    const nextLevel = currentLevel === 'easy' ? 'medium' : 'hard';
+    setCurrentLevel(nextLevel);
+    setShowLevelCompletion(false);
+    setHasGeneratedProblems(false);
+    setProblems([]);
+    setCurrentProblemIndex(0);
+    setResults(null);
+    setIsGeneratingProblems(true);
+    
+    // Update progress
+    updateUserProgress({ currentLevel: nextLevel, currentProblemIndex: 0 });
+
+    try {
+      if (selectedTheme) {
+        const newProblems = await generateArrayMethodProblems(selectedTheme, nextLevel);
+        handleProblemsGenerated(newProblems);
+      }
+    } catch (error) {
+      console.error('Error generating problems:', error);
+      setIsGeneratingProblems(false);
+    }
+  }
+
   return (
     <div className="min-h-screen" style={{ 
       backgroundColor: theme.colors.background.dark,
@@ -143,7 +234,7 @@ function Practice() {
                 fontFamily: theme.fonts.display,
                 textShadow: theme.animations.glow
               }}
-              onClick={() => navigate('/')}
+              onClick={() => { localStorage.clear(); navigate('/'); }}
             >
               HACKER GYM
             </h1>
@@ -184,12 +275,14 @@ function Practice() {
               />
             )}
 
-            <ProblemGenerator 
-              onProblemsGenerated={handleProblemsGenerated} 
-              currentLevel={currentLevel}
-              levelsCompleted={levelsCompleted}
-              selectedTheme={selectedTheme}
-            />
+            {!hasGeneratedProblems && !isGeneratingProblems && (
+              <ProblemGenerator 
+                onProblemsGenerated={handleProblemsGenerated} 
+                currentLevel={currentLevel}
+                levelsCompleted={levelsCompleted}
+                selectedTheme={selectedTheme}
+              />
+            )}
 
             {hasGeneratedProblems && (
               <>
@@ -217,6 +310,14 @@ function Practice() {
                   </button>
                 )}
               </>
+            )}
+
+            {showLevelCompletion && (
+              <LevelCompletionAnimation
+                currentLevel={currentLevel}
+                onContinue={handleContinue}
+                onIncreaseDifficulty={handleIncreaseDifficulty}
+              />
             )}
           </>
         )}
