@@ -16,10 +16,20 @@ module.exports = {
         'coach-bounce': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' }
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
+        },
+        'slide-up': {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' }
         }
       },
       animation: {
-        'coach-bounce': 'coach-bounce 5s ease-in-out infinite'
+        'coach-bounce': 'coach-bounce 5s ease-in-out infinite',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'slide-up': 'slide-up 0.5s ease-out'
       },
   		colors: {
   			background: 'hsl(var(--background))',

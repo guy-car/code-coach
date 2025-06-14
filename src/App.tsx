@@ -14,6 +14,7 @@ import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGenerate
 import { theme } from "@/lib/theme"
 import { Lobby } from "@/components/Lobby"
 import { generateArrayMethodProblems } from "@/services/openai"
+import { CoachMotivationAnimation } from "@/components/code-practice/CoachMotivationAnimation"
 
 function Practice() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
@@ -31,6 +32,42 @@ function Practice() {
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null)
   const [showLevelCompletion, setShowLevelCompletion] = useState(false)
   const [isGeneratingProblems, setIsGeneratingProblems] = useState(false)
+  const [mistakeCount, setMistakeCount] = useState(0)
+  const [showCoachMotivation, setShowCoachMotivation] = useState(false)
+  const [coachMessage, setCoachMessage] = useState('')
+  const [coachMotivationKey, setCoachMotivationKey] = useState(0)
+  const motivationalMessages = [
+    "Three strikes? Drop and give me 50 lines of code, maggot!",
+    "Your code is weak! Time to make it stronger, recruit!",
+    "That's three strikes, rookie! You call yourself a coder?",
+    "Your debugging game is pathetic! Step it up, soldier!",
+    "No pain, no gain! Fix those bugs and get back in formation!",
+    "Three mistakes? Your code needs more reps, maggot!",
+    "Time to stop messing around and get serious, recruit!",
+    "Your algorithm muscles are weak! Drop and code 20!",
+    "That's what I call a rookie mistake! Now fix it, soldier!",
+    "Your code endurance is pathetic! Push through the pain!",
+    "Three strikes and you're still standing? Good. Now fix it!",
+    "Your debugging stamina is weak! Time to get stronger, maggot!",
+    "Mistakes are just weights for your brain! Lift them, recruit!",
+    "Your code gains are non-existent! Time to work, soldier!",
+    "That's some weak stack training! Hit it harder, maggot!",
+    "Your algorithm form is sloppy! Clean it up, recruit!",
+    "Three mistakes? Time to grind harder, soldier!",
+    "Your debugging game is weak! Step it up, maggot!",
+    "Mistakes are just warm-ups! Now show me what you're made of!",
+    "Your syntax is weak! Time to get stronger, recruit!",
+    "That's what I call a rookie performance! Do better, soldier!",
+    "Your algorithm endurance is weak! Push through, maggot!",
+    "Three strikes? Time to get serious, recruit!",
+    "Your debugging form is sloppy! Clean it up, soldier!",
+    "Mistakes are just weights! Time to lift, maggot!",
+    "Your code stamina is weak! Get stronger, recruit!",
+    "That's some weak algorithm training! Hit it harder, soldier!",
+    "Your stack game is weak! Time to level up, maggot!",
+    "Three mistakes? Time to get your head in the game, recruit!",
+    "Your code is weak! Drop and give me 30 lines, soldier!"
+  ]
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -70,6 +107,17 @@ function Practice() {
       }
     }
   }, [location.state]);
+
+  // Add useEffect to handle motivational animation
+  useEffect(() => {
+    if (mistakeCount >= 3) {
+      setCoachMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+      setShowCoachMotivation(true);
+      setCoachMotivationKey(prev => prev + 1); // Increment key to force remount
+      setMistakeCount(0); // Reset after showing
+      setTimeout(() => setShowCoachMotivation(false), 2000 + Math.random() * 2000); // 2-4s
+    }
+  }, [mistakeCount]);
 
   const handleThemeSelect = (theme: Theme) => {
     setSelectedTheme(theme);
@@ -167,6 +215,11 @@ function Practice() {
         markLevelCompleted(currentLevel);
         setShowLevelCompletion(true);
       }
+      if (success) {
+        setMistakeCount(0); // Reset on success
+      } else {
+        setMistakeCount(prev => prev + 1);
+      }
     } catch (error) {
       console.error('Execution error:', error);
       setResults({
@@ -239,7 +292,6 @@ function Practice() {
               HACKER GYM
             </h1>
             <p className="text-sm" style={{ color: theme.colors.text.muted }}>
-              Reps reps reps
             </p>
           </div>
           {hasGeneratedProblems && currentProblem && (
@@ -319,6 +371,8 @@ function Practice() {
                 onIncreaseDifficulty={handleIncreaseDifficulty}
               />
             )}
+
+            {showCoachMotivation && <CoachMotivationAnimation key={coachMotivationKey} message={coachMessage} />}
           </>
         )}
       </div>
