@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { RotateCcw } from "lucide-react"
 
 interface CodeEditorProps {
   onRun: (code: string) => void;
@@ -11,6 +12,11 @@ interface CodeEditorProps {
 
 export function CodeEditor({ onRun, initialCode = "", key }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode)
+
+  const handleReset = () => {
+    localStorage.clear();
+    window.location.reload();
+  }
 
   return (
     <Card className="p-4">
@@ -28,7 +34,15 @@ export function CodeEditor({ onRun, initialCode = "", key }: CodeEditorProps) {
             placeholder="// Write your code here..."
           />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={handleReset}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset Progress
+          </Button>
           <Button onClick={() => onRun(code)}>Run Code</Button>
         </div>
       </div>

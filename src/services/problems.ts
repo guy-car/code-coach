@@ -14,6 +14,20 @@ export interface Problem {
 // Pre-defined problems for .push() method
 export const pushProblems: Problem[] = [
   {
+    title: "Add an Item to an Array",
+    description: "Use the push method to add 'orange' to the array.",
+    setup: "const arr = ['apple', 'banana'];\n// Your code here\nconsole.log(arr);",
+    expectedOutput: "['apple', 'banana', 'orange']",
+    difficulty: "easy",
+    solution: "arr.push('orange');",
+    testCases: [
+      {
+        input: "arr.push('orange')",
+        expected: "['apple', 'banana', 'orange']"
+      }
+    ]
+  },
+  {
     title: "Add Items to a Shopping Cart",
     description: "Use the push method to add new items to a shopping cart array. Add 'milk' and 'bread' to the cart.",
     setup: "const cart = ['eggs', 'cheese'];\n// Your code here\nconsole.log(cart);",
