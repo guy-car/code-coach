@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { generateArrayMethodProblems } from "@/services/openai"
 import { Problem } from "@/services/problems"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CoachLoadingMessage } from "./CoachLoadingMessage"
 
 interface ProblemGeneratorProps {
   onProblemsGenerated: (problems: Problem[]) => void;
@@ -40,48 +41,51 @@ export function ProblemGenerator({ onProblemsGenerated, currentLevel, levelsComp
   const canProgress = nextLevel && !levelsCompleted.includes(nextLevel)
 
   return (
-    <Card className="p-4">
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Generate Problems</h3>
-        <p className="text-sm text-muted-foreground">
-          Generate a new set of JavaScript array method practice problems.
-        </p>
-        
-        <div className="flex items-center gap-4">
-          <Select
-            value={selectedLevel}
-            onValueChange={(value: 'easy' | 'medium' | 'hard') => setSelectedLevel(value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="easy">Easy</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="hard">Hard</SelectItem>
-            </SelectContent>
-          </Select>
+    <>
+      <CoachLoadingMessage isLoading={isLoading} />
+      <Card className="p-4">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Generate Problems</h3>
+          <p className="text-sm text-muted-foreground">
+            Generate a new set of JavaScript array method practice problems.
+          </p>
+          
+          <div className="flex items-center gap-4">
+            <Select
+              value={selectedLevel}
+              onValueChange={(value: 'easy' | 'medium' | 'hard') => setSelectedLevel(value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="easy">Easy</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="hard">Hard</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Button 
-            onClick={handleGenerateProblems}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Generating...' : 'Generate Problems'}
-          </Button>
+            <Button 
+              onClick={handleGenerateProblems}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Generating...' : 'Generate Problems'}
+            </Button>
+          </div>
+          
+          {error && (
+            <div className="text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          {canProgress && (
+            <div className="text-sm text-muted-foreground">
+              Complete all {currentLevel} problems to unlock {nextLevel} level!
+            </div>
+          )}
         </div>
-        
-        {error && (
-          <div className="text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        {canProgress && (
-          <div className="text-sm text-muted-foreground">
-            Complete all {currentLevel} problems to unlock {nextLevel} level!
-          </div>
-        )}
-      </div>
-    </Card>
+      </Card>
+    </>
   )
 } 
