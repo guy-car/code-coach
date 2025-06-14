@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react"
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom"
 import { CodeEditor } from "@/components/code-practice/CodeEditor"
 import { ProblemDisplay } from "@/components/code-practice/ProblemDisplay"
 import { Results } from "@/components/code-practice/Results"
 import { ProblemGenerator } from "@/components/code-practice/ProblemGenerator"
 import { ProgressBar } from "@/components/code-practice/ProgressBar"
+import { ThemeSelection } from "@/components/code-practice/ThemeSelection"
 import { Badge } from "@/components/ui/badge"
-import { Problem, pushProblems as defaultProblems } from "@/services/problems"
+import { Problem } from "@/services/problems"
+import { Theme } from "@/services/themes"
 import { loadUserProgress, updateUserProgress, markLevelCompleted, cacheGeneratedProblems, getCachedProblems } from "@/services/storage"
 import { theme } from "@/lib/theme"
+import { Lobby } from "@/components/Lobby"
 
-function App() {
+function Practice() {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0)
   const [problems, setProblems] = useState<Problem[]>([])
   const [results, setResults] = useState<{
@@ -22,6 +26,9 @@ function App() {
   const [currentLevel, setCurrentLevel] = useState<'easy' | 'medium' | 'hard'>('easy')
   const [levelsCompleted, setLevelsCompleted] = useState<string[]>([])
   const [hasGeneratedProblems, setHasGeneratedProblems] = useState(false)
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const currentProblem = problems[currentProblemIndex]
 
@@ -38,101 +45,67 @@ function App() {
       setProblems(cachedProblems);
       setHasGeneratedProblems(true);
     }
-  }, []);
+
+    // Set theme from location state
+    if (location.state?.theme) {
+      setSelectedTheme(location.state.theme);
+    }
+  }, [location.state]);
+
+  const handleThemeSelect = (theme: Theme) => {
+    setSelectedTheme(theme);
+  }
 
   const handleProblemsGenerated = (newProblems: Problem[]) => {
     setProblems(newProblems);
+    setHasGeneratedProblems(true);
     setCurrentProblemIndex(0);
     setResults(null);
     setCodeEditorKey(prev => prev + 1);
-    setHasGeneratedProblems(true);
     
-    // Cache the generated problems
+    // Cache the problems
     cacheGeneratedProblems(currentLevel, newProblems);
+    
+    // Save progress
+    updateUserProgress({ currentProblemIndex: 0 });
   }
 
-  const handleRunCode = (code: string) => {
+  const handleRunCode = async (code: string) => {
+    if (!currentProblem) return;
+    
     try {
-      // Get the variable name from the first line of setup
-      const firstLine = currentProblem.setup.split('\n')[0]
-      const variableName = firstLine.split('=')[0].trim().replace('const ', '')
+      // Create a function from the user's code
+      const userFunction = new Function('arr', code);
       
-      // Combine setup code with user code
-      const setupCode = currentProblem.setup.replace('// Your code here', code)
+      // Run the function with the first test case input
+      const testInput = JSON.parse(currentProblem.testCases[0].input);
+      const actualArray = userFunction(testInput);
+      const expectedArray = JSON.parse(currentProblem.testCases[0].expected);
       
-      // Create a mock console.log to capture the output
-      let capturedOutput: any = null
-      const mockConsole = {
-        log: (...args: any[]) => {
-          capturedOutput = args[0]
-        }
-      }
-      
-      // Execute the code with the mock console
-      const func = new Function('console', setupCode)
-      func(mockConsole)
-      
-      // Parse both the actual and expected outputs
-      const actualArray = Array.isArray(capturedOutput) ? capturedOutput : JSON.parse(JSON.stringify(capturedOutput))
-      
-      // Convert JavaScript object notation to valid JSON by replacing unquoted property names
-      const normalizedExpectedOutput = currentProblem.expectedOutput
-        .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3') // Add quotes around property names
-        .replace(/'/g, '"') // Replace single quotes with double quotes
-      const expectedArray = JSON.parse(normalizedExpectedOutput)
-      
-      // Compare array contents with deep equality for objects
-      const success = Array.isArray(actualArray) && 
-                     Array.isArray(expectedArray) &&
-                     actualArray.length === expectedArray.length &&
-                     actualArray.every((item, index) => {
-                       const expectedItem = expectedArray[index]
-                       if (typeof item === 'object' && item !== null) {
-                         return JSON.stringify(item) === JSON.stringify(expectedItem)
-                       }
-                       return item === expectedItem
-                     })
-      
-      // Format the actual output to match the expected output style (single quotes with spaces)
-      const formatOutput = (arr: any[]): string => {
-        return '[' + arr.map(item => {
-          if (typeof item === 'string') {
-            return `'${item}'`
-          } else if (typeof item === 'object' && item !== null) {
-            return '{ ' + Object.entries(item)
-              .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : value}`)
-              .join(', ') + ' }'
-          }
-          return item
-        }).join(', ') + ']'
-      }
+      // Compare the arrays
+      const success = JSON.stringify(actualArray) === JSON.stringify(expectedArray);
       
       setResults({
         success,
-        message: success 
-          ? "Great job! Your solution is correct."
-          : "Not quite right. Check your solution and try again.",
+        message: success ? 'Correct!' : 'Try again!',
         expectedOutput: currentProblem.expectedOutput,
-        actualOutput: formatOutput(actualArray)
-      })
-
-      // If successful and it's the last problem, mark the level as completed
+        actualOutput: JSON.stringify(actualArray, null, 2)
+      });
+      
       if (success && currentProblemIndex === problems.length - 1) {
+        // Mark level as completed
         const newLevelsCompleted = [...levelsCompleted, currentLevel];
         setLevelsCompleted(newLevelsCompleted);
         markLevelCompleted(currentLevel);
-        
-        // Update progress with new levels completed
-        updateUserProgress({ levelsCompleted: newLevelsCompleted });
       }
     } catch (error) {
-      console.error('Execution error:', error)
+      console.error('Execution error:', error);
       setResults({
         success: false,
         message: `Error: ${error instanceof Error ? error.message : 'Something went wrong'}`,
         expectedOutput: currentProblem.expectedOutput,
         actualOutput: "Error occurred"
-      })
+      });
     }
   }
 
@@ -157,18 +130,22 @@ function App() {
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
         <header className="flex items-center justify-between border-b pb-4" style={{ borderColor: theme.colors.border }}>
           <div>
-            <h1 className="text-5xl font-bold mb-2" style={{ 
-              color: theme.colors.primary,
-              fontFamily: theme.fonts.display,
-              textShadow: theme.animations.glow
-            }}>
+            <h1 
+              className="text-5xl font-bold mb-2 cursor-pointer hover:opacity-80 transition-opacity" 
+              style={{ 
+                color: theme.colors.primary,
+                fontFamily: theme.fonts.display,
+                textShadow: theme.animations.glow
+              }}
+              onClick={() => navigate('/')}
+            >
               HACKER GYM
             </h1>
             <p className="text-sm" style={{ color: theme.colors.text.muted }}>
               Reps reps reps
             </p>
           </div>
-          {currentProblem && (
+          {hasGeneratedProblems && currentProblem && (
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className="font-mono text-lg" style={{ 
                 backgroundColor: theme.colors.background.dark,
@@ -189,49 +166,67 @@ function App() {
           )}
         </header>
 
-        {hasGeneratedProblems && (
-          <ProgressBar 
-            currentProblemIndex={currentProblemIndex}
-            totalProblems={problems.length}
-            level={currentLevel}
-          />
-        )}
-
-        <ProblemGenerator 
-          onProblemsGenerated={handleProblemsGenerated} 
-          currentLevel={currentLevel}
-          levelsCompleted={levelsCompleted}
-        />
-
-        {hasGeneratedProblems && (
+        {!selectedTheme ? (
+          <ThemeSelection onThemeSelect={handleThemeSelect} />
+        ) : (
           <>
-            <ProblemDisplay problem={currentProblem} />
-            <CodeEditor onRun={handleRunCode} key={codeEditorKey} />
-            {results && (
-              <Results 
-                output={results.actualOutput}
-                error={results.success ? null : results.message}
-                isCorrect={results.success}
+            {hasGeneratedProblems && (
+              <ProgressBar 
+                currentProblemIndex={currentProblemIndex}
+                totalProblems={problems.length}
+                level={currentLevel}
               />
             )}
-            
-            {results?.success && currentProblemIndex < problems.length - 1 && (
-              <button
-                onClick={handleNextProblem}
-                className="w-full py-3 px-4 rounded-md font-mono text-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,255,0,0.3)]"
-                style={{
-                  backgroundColor: theme.colors.primary,
-                  color: theme.colors.background.dark,
-                  boxShadow: theme.animations.glow
-                }}
-              >
-                NEXT PROBLEM
-              </button>
+
+            <ProblemGenerator 
+              onProblemsGenerated={handleProblemsGenerated} 
+              currentLevel={currentLevel}
+              levelsCompleted={levelsCompleted}
+              selectedTheme={selectedTheme}
+            />
+
+            {hasGeneratedProblems && (
+              <>
+                <ProblemDisplay problem={currentProblem} />
+                <CodeEditor onRun={handleRunCode} key={codeEditorKey} />
+                {results && (
+                  <Results 
+                    output={results.actualOutput || null}
+                    error={results.success ? null : results.message || null}
+                    isCorrect={results.success}
+                  />
+                )}
+                
+                {results?.success && currentProblemIndex < problems.length - 1 && (
+                  <button
+                    onClick={handleNextProblem}
+                    className="w-full py-3 px-4 rounded-md font-mono text-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,255,0,0.3)]"
+                    style={{
+                      backgroundColor: theme.colors.primary,
+                      color: theme.colors.background.dark,
+                      boxShadow: theme.animations.glow
+                    }}
+                  >
+                    NEXT PROBLEM
+                  </button>
+                )}
+              </>
             )}
           </>
         )}
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Lobby />} />
+        <Route path="/practice" element={<Practice />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

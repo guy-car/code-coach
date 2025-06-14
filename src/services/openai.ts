@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { Theme } from './themes';
 
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -69,10 +70,32 @@ export async function generateArrayMethodProblem(method: string): Promise<Proble
   }
 }
 
-export async function generateArrayMethodProblems(method: string, level: 'easy' | 'medium' | 'hard'): Promise<Problem[]> {
-  const prompt = `Generate EXACTLY 10 JavaScript coding problems that teach the array ${method} method, all at ${level} difficulty level.
+export async function generateArrayMethodProblems(theme: Theme, level: 'easy' | 'medium' | 'hard'): Promise<Problem[]> {
+  const examples = theme.examples.map(example => JSON.stringify(example, null, 2)).join('\n\n');
+  
+  const difficultyGuidelines = level === 'easy' ? `
+  - Basic usage of the method with simple data types
+  - Focus on single operations
+  - Use simple arrays with primitive values
+  - Clear, straightforward problem descriptions` : 
+  level === 'medium' ? `
+  - Using the method within functions
+  - Work with arrays of objects
+  - Combine with simple conditions
+  - Include basic error handling` :
+  `
+  - Complex data structures and nested arrays
+  - Combine with other array methods
+  - Advanced error handling
+  - Performance considerations
+  - Complex object manipulation`;
+
+  const prompt = `Generate EXACTLY 10 JavaScript coding problems that teach ${theme.name}.
   Each problem should be practical and focused on real-world usage scenarios.
   The problems should be varied but maintain consistent difficulty.
+
+  Here are example problems that follow our exact format:
+  ${examples}
 
   IMPORTANT: Follow these EXACT format requirements:
   1. Use 'const' declarations, never 'let'
@@ -110,23 +133,7 @@ export async function generateArrayMethodProblems(method: string, level: 'easy' 
 
   CRITICAL: You MUST return EXACTLY 10 problems, no more and no less.
 
-  Guidelines for ${level} difficulty:
-  ${level === 'easy' ? `
-  - Basic usage of the method with simple data types
-  - Focus on single operations
-  - Use simple arrays with primitive values
-  - Clear, straightforward problem descriptions` : 
-  level === 'medium' ? `
-  - Using the method within functions
-  - Work with arrays of objects
-  - Combine with simple conditions
-  - Include basic error handling` :
-  `
-  - Complex data structures and nested arrays
-  - Combine with other array methods
-  - Advanced error handling
-  - Performance considerations
-  - Complex object manipulation`}`;
+  Guidelines for ${level} difficulty:${difficultyGuidelines}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -139,16 +146,30 @@ export async function generateArrayMethodProblems(method: string, level: 'easy' 
     if (!response) throw new Error('No response from OpenAI');
     
     const result = JSON.parse(response);
+    
+    // Debug logging
+    console.log('API Response:', result);
+    
+    if (!result.problems) {
+      throw new Error('Response missing problems array');
+    }
+    
     const problems = result.problems as Problem[];
     
     // Ensure we have exactly 10 problems
-    if (!Array.isArray(problems) || problems.length !== 10) {
-      throw new Error(`Expected 10 problems but got ${problems?.length || 0}`);
+    if (!Array.isArray(problems)) {
+      throw new Error('Problems is not an array');
+    }
+    
+    if (problems.length !== 10) {
+      console.error('Received problems:', problems);
+      throw new Error(`Expected 10 problems but got ${problems.length}`);
     }
     
     // Validate each problem has the required fields
     problems.forEach((problem, index) => {
       if (!problem.title || !problem.description || !problem.setup || !problem.expectedOutput) {
+        console.error('Invalid problem:', problem);
         throw new Error(`Problem ${index + 1} is missing required fields`);
       }
     });
