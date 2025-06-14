@@ -69,10 +69,10 @@ export async function generateArrayMethodProblem(method: string): Promise<Proble
   }
 }
 
-export async function generateArrayMethodProblems(method: string, count: number = 3): Promise<Problem[]> {
-  const prompt = `Generate ${count} JavaScript coding problems that teach the array ${method} method, with increasing difficulty levels.
+export async function generateArrayMethodProblems(method: string, level: 'easy' | 'medium' | 'hard'): Promise<Problem[]> {
+  const prompt = `Generate 10 JavaScript coding problems that teach the array ${method} method, all at ${level} difficulty level.
   Each problem should be practical and focused on real-world usage scenarios.
-  The problems should progress from basic usage to more complex applications.
+  The problems should be varied but maintain consistent difficulty.
 
   IMPORTANT: Follow these EXACT format requirements:
   1. Use 'const' declarations, never 'let'
@@ -96,7 +96,7 @@ export async function generateArrayMethodProblems(method: string, count: number 
         "description": "Clear problem description",
         "setup": "Initial code setup with array and any necessary variables",
         "expectedOutput": "What the final array should look like",
-        "difficulty": "easy|medium|hard",
+        "difficulty": "${level}",
         "solution": "The correct code solution",
         "testCases": [
           {
@@ -108,10 +108,23 @@ export async function generateArrayMethodProblems(method: string, count: number 
     ]
   }
 
-  Guidelines for each difficulty level:
-  - Easy: Basic usage of the method with simple data types
-  - Medium: Using the method within a function or with more complex data structures
-  - Hard: Combining the method with other array methods or complex object manipulation`;
+  Guidelines for ${level} difficulty:
+  ${level === 'easy' ? `
+  - Basic usage of the method with simple data types
+  - Focus on single operations
+  - Use simple arrays with primitive values
+  - Clear, straightforward problem descriptions` : 
+  level === 'medium' ? `
+  - Using the method within functions
+  - Work with arrays of objects
+  - Combine with simple conditions
+  - Include basic error handling` :
+  `
+  - Complex data structures and nested arrays
+  - Combine with other array methods
+  - Advanced error handling
+  - Performance considerations
+  - Complex object manipulation`}`;
 
   try {
     const completion = await openai.chat.completions.create({
