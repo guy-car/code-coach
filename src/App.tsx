@@ -60,13 +60,27 @@ function App() {
                        return item === expectedItem
                      })
       
+      // Format the actual output to match the expected output style (single quotes with spaces)
+      const formatOutput = (arr: any[]): string => {
+        return '[' + arr.map(item => {
+          if (typeof item === 'string') {
+            return `'${item}'`
+          } else if (typeof item === 'object' && item !== null) {
+            return '{ ' + Object.entries(item)
+              .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : value}`)
+              .join(', ') + ' }'
+          }
+          return item
+        }).join(', ') + ']'
+      }
+      
       setResults({
         success,
         message: success 
           ? "Great job! Your solution is correct."
           : "Not quite right. Check your solution and try again.",
         expectedOutput: currentProblem.expectedOutput,
-        actualOutput: JSON.stringify(result)
+        actualOutput: formatOutput(actualArray)
       })
     } catch (error) {
       console.error('Execution error:', error)
