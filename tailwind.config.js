@@ -19,7 +19,7 @@ module.exports = {
         }
       },
       animation: {
-        'coach-bounce': 'coach-bounce 2s ease-in-out infinite'
+        'coach-bounce': 'coach-bounce 5s ease-in-out infinite'
       },
   		colors: {
   			background: 'hsl(var(--background))',
